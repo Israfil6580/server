@@ -33,9 +33,8 @@ async function run() {
       const query = req.query.query ? req.query.query.toLowerCase() : "";
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 8;
-
+      const sort = req.query.sort || "";
       const { brand, category, minPrice, maxPrice } = req.query;
-
       // Build the filter object
       const filter = {};
 
@@ -58,12 +57,25 @@ async function run() {
         };
       }
 
+      // Build the sort object
+      let sortOptions = {};
+      if (sort === "price-asc") {
+        sortOptions.price = 1; // Ascending order
+      } else if (sort === "price-desc") {
+        sortOptions.price = -1; // Descending order
+      } else if (sort === "date-added-desc") {
+        sortOptions.creationDate = -1; // Newest first
+      } else {
+        sortOptions._id = 1; // Default sorting by _id
+      }
+
       try {
         const skip = (page - 1) * limit;
 
-        // Fetch filtered products
+        // Fetch filtered and sorted products
         const products = await productsCollection
           .find(filter)
+          .sort(sortOptions)
           .skip(skip)
           .limit(limit)
           .toArray();
@@ -82,10 +94,10 @@ async function run() {
           products,
         });
       } catch (error) {
-        console.error("Error fetching search results:", error);
+        console.error("Error fetching products:", error);
         res
           .status(500)
-          .json({ error: "An error occurred while fetching search results" });
+          .json({ error: "An error occurred while fetching products" });
       }
     });
 
