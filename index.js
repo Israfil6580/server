@@ -43,7 +43,7 @@ async function run() {
       try {
         const query = req.query.query ? req.query.query.toLowerCase() : "";
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 8;
+        const limit = parseInt(req.query.limit) || 10;
         const sort = req.query.sort || "";
         const { brand, category, minPrice, maxPrice } = req.query;
         const filter = {};
