@@ -32,7 +32,9 @@ async function run() {
 
     const database = client.db("Product_Analyze");
     const productsCollection = database.collection("products");
-
+    app.get("/", async (req, res) => {
+      res.send("hello ");
+    });
     // search products with pagination
     app.get("/products", async (req, res) => {
       const query = req.query.query ? req.query.query.toLowerCase() : "";
