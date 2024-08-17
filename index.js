@@ -1,8 +1,12 @@
+// backend/server.js
+
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
+const { MongoClient, ServerApiVersion } = require("mongodb");
+
 const app = express();
-const PORT = process.env.PORT || 6000;
+const PORT = process.env.PORT || 5000; // Default port
 
 const corsConfig = {
   origin: ["http://localhost:5173", "https://netcomm.netlify.app"],
@@ -14,9 +18,7 @@ app.use(cors(corsConfig));
 // Middleware
 app.use(express.json());
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
 const uri = process.env.URI;
-
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -41,6 +43,8 @@ async function run() {
     // Search products with pagination
     app.get("/products", async (req, res) => {
       try {
+        console.log("Fetching products with query parameters:", req.query);
+
         const query = req.query.query ? req.query.query.toLowerCase() : "";
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
@@ -80,6 +84,8 @@ async function run() {
 
         const skip = (page - 1) * limit;
 
+        console.log("Filter and sort options:", filter, sortOptions);
+
         const products = await productsCollection
           .find(filter)
           .sort(sortOptions)
@@ -98,7 +104,7 @@ async function run() {
           products,
         });
       } catch (error) {
-        console.error("Error fetching products:", error);
+        console.error("Error fetching products:", error.message);
         res
           .status(500)
           .json({ error: "An error occurred while fetching products" });
@@ -106,7 +112,7 @@ async function run() {
     });
 
     // Find categories
-    app.get("/api/categories", async (req, res) => {
+    app.get("/api/categories", async (_req, res) => {
       try {
         const categories = await productsCollection
           .aggregate([
@@ -122,7 +128,7 @@ async function run() {
     });
 
     // Find brands
-    app.get("/api/brands", async (req, res) => {
+    app.get("/allbrands", async (_req, res) => {
       try {
         const brands = await productsCollection
           .aggregate([
@@ -136,14 +142,16 @@ async function run() {
         res.status(500).json({ error: "Failed to fetch brands" });
       }
     });
+
+    // Start the server
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to connect to MongoDB:", error.message);
   } finally {
     // Ensure the client will close when you finish/error
-    // await client.close();
+    // await client.close(); // Uncomment if you want to close the client
   }
 }
 run().catch(console.dir);
-
-// Start the server
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
