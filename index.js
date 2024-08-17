@@ -5,7 +5,7 @@ const app = express();
 const PORT = process.env.PORT || 6000;
 
 const corsConfig = {
-  origin: ["https://client-ashen-six.vercel.app"],
+  origin: ["http://localhost:5173", "https://netcomm.netlify.app"],
   credentials: true,
   optionsSuccessStatus: 200,
 };
@@ -17,7 +17,6 @@ app.use(express.json());
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const uri = process.env.URI;
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -29,13 +28,14 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     await client.connect();
-    console.log("connected to MongoDB!");
+    console.log("Connected to MongoDB!");
 
     const database = client.db("Product_Analyze");
     const productsCollection = database.collection("products");
 
-    app.get("/", async (req, res) => {
-      res.send("hello ");
+    // Home route
+    app.get("/", (req, res) => {
+      res.send("Hello World!");
     });
 
     // Search products with pagination
@@ -105,29 +105,8 @@ async function run() {
       }
     });
 
-    // Find brands
-    app.get("/brands", async (req, res) => {
-      try {
-        const brands = await productsCollection
-          .aggregate([
-            { $group: { _id: "$brandName" } },
-            { $project: { _id: 0, brandName: "$_id" } },
-          ])
-          .toArray();
-
-        const brandNames = brands.map((brand) => brand.brandName);
-
-        res.json(brandNames);
-      } catch (error) {
-        console.error("Error fetching brands:", error);
-        res
-          .status(500)
-          .json({ message: "Failed to fetch brands", error: error.message });
-      }
-    });
-
     // Find categories
-    app.get("/categories", async (req, res) => {
+    app.get("/api/categories", async (req, res) => {
       try {
         const categories = await productsCollection
           .aggregate([
@@ -135,16 +114,26 @@ async function run() {
             { $project: { _id: 0, category: "$_id" } },
           ])
           .toArray();
-
-        const categoryNames = categories.map((category) => category.category);
-
-        res.json(categoryNames);
+        res.json(categories.map((c) => c.category));
       } catch (error) {
-        console.error("Error fetching categories:", error); // Updated error message
-        res.status(500).json({
-          message: "Failed to fetch categories",
-          error: error.message,
-        });
+        console.error("Error fetching categories:", error);
+        res.status(500).json({ error: "Failed to fetch categories" });
+      }
+    });
+
+    // Find brands
+    app.get("/api/brands", async (req, res) => {
+      try {
+        const brands = await productsCollection
+          .aggregate([
+            { $group: { _id: "$brandName" } },
+            { $project: { _id: 0, brandName: "$_id" } },
+          ])
+          .toArray();
+        res.json(brands.map((b) => b.brandName));
+      } catch (error) {
+        console.error("Error fetching brands:", error);
+        res.status(500).json({ error: "Failed to fetch brands" });
       }
     });
   } finally {
