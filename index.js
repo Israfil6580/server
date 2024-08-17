@@ -5,7 +5,7 @@ const app = express();
 const PORT = process.env.PORT || 6000;
 
 const corsConfig = {
-  origin: ["http://localhost:5173", "https://client-ashen-six.vercel.app"],
+  origin: ["https://client-ashen-six.vercel.app"],
   credentials: true,
   optionsSuccessStatus: 200,
 };
